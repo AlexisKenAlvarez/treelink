@@ -15,8 +15,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Session } from "next-auth";
+import { SignOut } from "@/lib/auth-function";
+import { useRouter } from "next/navigation";
 
-const Nav = () => {
+const Nav = ({ session }: { session: Session | null }) => {
+  const router = useRouter()
   const nav_list = [
     {
       title: "templates",
@@ -91,21 +95,20 @@ const Nav = () => {
             <SheetHeader>
               <SheetTitle className="text-left">
                 <div className="flex items-center gap-3">
-                <button className="flex gap-2">
-                  <Image
-                    src="/logo.webp"
-                    alt="logo"
-                    width={50}
-                    height={50}
-                    className="w-6 h-6 shrink-0"
-                  />
-                  <h1 className="uppercase font-bold">Linkme</h1>
-                </button>
-                <Badge variant={"secondary"} className="text-xs">
-                  Beta
-                </Badge>
+                  <button className="flex gap-2">
+                    <Image
+                      src="/logo.webp"
+                      alt="logo"
+                      width={50}
+                      height={50}
+                      className="w-6 h-6 shrink-0"
+                    />
+                    <h1 className="uppercase font-bold">Linkme</h1>
+                  </button>
+                  <Badge variant={"secondary"} className="text-xs">
+                    Beta
+                  </Badge>
                 </div>
-               
               </SheetTitle>
               <ul className="text-sm flex flex-col gap-5 font-medium text-left !mt-5">
                 {nav_list.map((item) => (
@@ -119,7 +122,16 @@ const Nav = () => {
         </Sheet>
 
         <div className="flex gap-5">
-          <Button>Login</Button>
+          {session ? (
+            <Button onClick={() => {
+              SignOut()
+              router.refresh()
+            }}>Sign out</Button>
+          ) : (
+            <Link href="/login">
+              <Button>Login</Button>
+            </Link>
+          )}
 
           <ul className="flex items-center gap-5">
             {socials.map((social, index) => (
