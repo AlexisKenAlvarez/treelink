@@ -16,11 +16,10 @@ const resolvers = {
           email: args.email,
         },
       });
-    }
+    },
   },
   Mutation: {
     addUser: (_, args) => {
-      console.log("args", args);
       return prisma.users.create({
         data: {
           id: args.user.id,
@@ -28,9 +27,51 @@ const resolvers = {
           email: args.user.email,
           bio: args.user.bio,
           image: args.user.image,
-          username: args.user.username
+          username: args.user.username,
         },
       });
+    },
+    updateUser: (_, args) => {
+      console.log("🚀 ~ args:", args)
+      type updateData = {
+        name?: string;
+        email?: string;
+        bio?: string;
+        image?: string;
+        username?: string;
+      };
+      const { oldValue, newValue } = args;
+      const updateData: updateData = {};
+
+      if (oldValue.name !== newValue.name) {
+        updateData.name = newValue.name;
+      }
+      if (oldValue.email !== newValue.email) {
+        updateData.email = newValue.email;
+      }
+      if (oldValue.bio !== newValue.bio) {
+        updateData.bio = newValue.bio;
+      }
+      if (oldValue.image !== newValue.image) {
+        updateData.image = newValue.image;
+      }
+      if (oldValue.username !== newValue.username) {
+        updateData.username = newValue.username;
+      }
+
+      try {
+        if (Object.keys(updateData).length > 0) {
+          return prisma.users.update({
+            where: {
+              id: oldValue.id,
+            },
+            data: updateData,
+          });
+        }
+      } catch (error) {
+        console.log("Error updating the user");
+        console.log(error);
+      }
     },
   },
 };

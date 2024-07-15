@@ -18,3 +18,12 @@ export const ADD_USER_MUTATION = gql`
     }
   }
 `;
+
+export const UPDATE_USER_MUTATION = gql`
+  mutation Mutation($oldValue: UpdateUserInput!, $newValue: UpdateUserInput!) {
+    updateUser(oldValue: $oldValue, newValue: $newValue) {
+      username
+      id
+    }
+  }
+`;

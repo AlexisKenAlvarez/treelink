@@ -1,7 +1,6 @@
+import { getClient } from "@/lib/client";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
-import { getClient } from "@/lib/client";
-import { gql } from "@apollo/client";
 import { ADD_USER_MUTATION, USER_QUERY } from "./lib/graphql";
 
 declare module "next-auth" {
@@ -26,10 +25,10 @@ declare module "next-auth" {
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn() {
       return true;
     },
-    async session({ session, token }) {
+    async session({ session, token, trigger }) {
       const client = getClient();
 
       const { data } = await client.query({
@@ -40,7 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       });
 
       if (data.getUser === null) {
-        const { errors } = await client.mutate({
+        const { data, errors } = await client.mutate({
           mutation: ADD_USER_MUTATION,
           variables: {
             user: {
@@ -51,16 +50,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
 
+        session.user.id = data.addUser.id;
+
         if (errors) {
           console.error(errors);
         }
       } else {
         session.user.username = data.getUser.username;
+        session.user.id = data.getUser.id;
+      }
+
+      if (token.username) {
+        console.log("token.username", token.username);
+        session.user.username === token.username;
       }
 
       return session;
     },
-    async jwt({ token, user, account, profile, session }) {
+    async jwt({ token, trigger, session }) {
+      if (trigger === "update") {
+        token.username = session.username;
+      }
       return token;
     },
   },

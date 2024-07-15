@@ -55,7 +55,7 @@ const Nav = ({ session }: { session: Session | null }) => {
   return (
     <nav className="w-full border-b">
       <div className="w-full p-4 bg-accent text-white text-xs text-center font-medium">
-        ✨Introducing Linkme Pro - 50+ blocks and templates to build beautiful
+        ✨Introducing Treelink Pro - 50+ blocks and templates to build beautiful
         landing pages in minutes.
       </div>
       <div className="p-3 flex justify-between max-w-screen-xl mx-auto">
@@ -69,7 +69,7 @@ const Nav = ({ session }: { session: Session | null }) => {
                 height={50}
                 className="w-6 h-6 shrink-0"
               />
-              <h1 className="uppercase font-bold">Linkme</h1>
+              <h1 className="uppercase font-bold">Treelink</h1>
             </button>
             <Badge variant={"secondary"} className="text-xs">
               Beta
@@ -103,7 +103,7 @@ const Nav = ({ session }: { session: Session | null }) => {
                       height={50}
                       className="w-6 h-6 shrink-0"
                     />
-                    <h1 className="uppercase font-bold">Linkme</h1>
+                    <h1 className="uppercase font-bold">Treelink</h1>
                   </button>
                   <Badge variant={"secondary"} className="text-xs">
                     Beta
