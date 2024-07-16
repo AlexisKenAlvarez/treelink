@@ -26,6 +26,7 @@ const AddUsername = () => {
   const router = useRouter();
 
   const { data: session, update } = useSession();
+  console.log("🚀 ~ AddUsername ~ session:", session)
   const [addUsername, { loading }] = useMutation(UPDATE_USER_MUTATION);
 
   const formSchema = z.object({
@@ -44,7 +45,6 @@ const AddUsername = () => {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      console.log("SINUBMIT");
       await addUsername({
         variables: {
           oldValue: {

@@ -27,11 +27,12 @@ const resolvers = {
                     bio: args.user.bio,
                     image: args.user.image,
                     username: args.user.username,
+                    profile_title: args.user.name,
                 },
             });
         },
-        updateUser: (_, args) => {
-            console.log("🚀 ~ args:", args);
+        updateUser: (_, args, ctx) => {
+            const user = ctx.token;
             const { oldValue, newValue } = args;
             const updateData = {};
             if (oldValue.name !== newValue.name) {
@@ -48,6 +49,12 @@ const resolvers = {
             }
             if (oldValue.username !== newValue.username) {
                 updateData.username = newValue.username;
+            }
+            if (args.oldValue.id === user.id) {
+                console.log("This is the correct user that requested it");
+            }
+            else {
+                console.log("Incorrect user!");
             }
             try {
                 if (Object.keys(updateData).length > 0) {
@@ -73,6 +80,24 @@ const server = new ApolloServer({
 const { url } = await startStandaloneServer(server, {
     listen: {
         port: PORT,
+    },
+    context: async ({ req, res }) => {
+        // Get the user token from the headers.
+        const token = req.headers.authorization || "";
+        const secret = process.env.AUTH_SECRET;
+        if (!secret) {
+            throw new Error("No auth secret");
+        }
+        // const decoded = await nextauth.decode({
+        //   token,
+        //   secret,
+        //   salt:
+        //     process.env.NODE_ENV === "production"
+        //       ? "__Secure-authjs.session-token"
+        //       : "authjs.session-token",
+        // });
+        // Add the user to the context
+        // return { token: decoded as User };
     },
 });
 console.log(`Server ready at port ${PORT}`);

@@ -22,55 +22,61 @@ declare module "next-auth" {
   }
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    username: string;
+  }
+}
+
+
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     async signIn() {
       return true;
     },
     async session({ session, token, trigger }) {
-      const client = getClient();
-
-      const { data } = await client.query({
-        query: USER_QUERY,
-        variables: {
-          email: token.email,
-        },
-      });
-
-      if (data.getUser === null) {
-        const { data, errors } = await client.mutate({
-          mutation: ADD_USER_MUTATION,
-          variables: {
-            user: {
-              name: token.name,
-              email: token.email,
-              image: token.picture,
-            },
-          },
-        });
-
-        session.user.id = data.addUser.id;
-
-        if (errors) {
-          console.error(errors);
-        }
-      } else {
-        session.user.username = data.getUser.username;
-        session.user.id = data.getUser.id;
-      }
-
-      if (token.username) {
-        console.log("token.username", token.username);
-        session.user.username === token.username;
-      }
+      session.user.id = token.id as string
+      session.user.username = token.username as string
 
       return session;
     },
     async jwt({ token, trigger, session }) {
+      const client = getClient();
+      const { data } = await client.query({
+        query: USER_QUERY,
+        variables: {
+          email: token.email ?? "",
+        },
+      });
+
+      if (data.getUser) {
+        token.id = data.getUser.id;
+        token.username = data.getUser.username as string;
+      } else {
+        const { data } = await client.mutate({
+          mutation: ADD_USER_MUTATION,
+          variables: {
+            user: {
+              name: token.name!,
+              email: token.email!,
+              image: token.picture!,
+            },
+          },
+        });
+
+        token.id = data?.addUser?.id
+      }
+
       if (trigger === "update") {
         token.username = session.username;
       }
+
       return token;
     },
   },

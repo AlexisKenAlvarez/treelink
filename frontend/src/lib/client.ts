@@ -9,7 +9,7 @@ export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
   return new ApolloClient({
     cache: new InMemoryCache(),
     link: new HttpLink({
-      uri: "http://localhost:4000/",
+      uri: process.env.NEXT_PUBLIC_GRAPHQL_URL,
     }),
   });
 });

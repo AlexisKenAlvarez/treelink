@@ -2,6 +2,16 @@ import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { typeDefs } from "./schema.js";
 import { PrismaClient } from "@prisma/client";
+import { decode } from "next-auth/jwt";
+
+// import jwt from "jsonwebtoken";
+
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  picture: string;
+};
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 const prisma = new PrismaClient();
@@ -28,20 +38,23 @@ const resolvers = {
           bio: args.user.bio,
           image: args.user.image,
           username: args.user.username,
+          profile_title: args.user.name,
         },
       });
     },
-    updateUser: (_, args) => {
-      console.log("🚀 ~ args:", args)
-      type updateData = {
+    updateUser: (_, args, ctx) => {
+      const user = ctx.token as User;
+
+      type updateDataType = {
         name?: string;
         email?: string;
         bio?: string;
         image?: string;
         username?: string;
+        profile_title?: string;
       };
       const { oldValue, newValue } = args;
-      const updateData: updateData = {};
+      const updateData: updateDataType = {};
 
       if (oldValue.name !== newValue.name) {
         updateData.name = newValue.name;
@@ -57,6 +70,16 @@ const resolvers = {
       }
       if (oldValue.username !== newValue.username) {
         updateData.username = newValue.username;
+      }
+
+      if (oldValue.profile_title !== newValue.profile_title) {
+        updateData.profile_title = newValue.profile_title;
+      }
+
+      if (args.oldValue?.id === user?.id) {
+        console.log("This is the correct user that requested it");
+      } else {
+        console.log("Incorrect user!");
       }
 
       try {
@@ -84,6 +107,30 @@ const server = new ApolloServer({
 const { url } = await startStandaloneServer(server, {
   listen: {
     port: PORT,
+  },
+  context: async ({ req, res }) => {
+    // Get the user token from the headers.
+    const token = req.headers.authorization || "";
+
+    const secret = process.env.AUTH_SECRET;
+
+    if (!secret) {
+      throw new Error("No auth secret");
+    }
+
+    const decoded = await decode({
+      token,
+      secret,
+      salt:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
+    });
+
+    console.log("Decoded", decoded);
+
+    // Add the user to the context
+    return { token: decoded as User };
   },
 });
 

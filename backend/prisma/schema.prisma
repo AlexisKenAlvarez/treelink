@@ -15,12 +15,13 @@ datasource db {
 }
 
 model Users {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  username String?
-  name     String?
-  bio      String?
-  image    String?
+  id            Int     @id @default(autoincrement())
+  email         String  @unique
+  username      String?
+  profile_title String
+  name          String
+  bio           String?
+  image         String?
 
   @@index([email])
 }
