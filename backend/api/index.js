@@ -1,20 +1,21 @@
-import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
-import { typeDefs } from "./schema.js";
-import { PrismaClient } from "@prisma/client";
+import { typeDefs } from "./schema";
 import { decode } from "next-auth/jwt";
 
-// import jwt from "jsonwebtoken";
+import { ApolloServer, gql } from "apollo-server-express";
+import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import http from "http";
+import express from "express";
+import cors from "cors";
 
-type User = {
-  id: number;
-  name: string;
-  email: string;
-  picture: string;
-};
+const app = express();
+app.use(cors());
+app.use(express.json());
+const httpServer = http.createServer(app);
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
+
+
 const resolvers = {
   Query: {
     users: () => {
@@ -43,18 +44,18 @@ const resolvers = {
       });
     },
     updateUser: (_, args, ctx) => {
-      const user = ctx.token as User;
+      const user = ctx.token;
 
-      type updateDataType = {
-        name?: string;
-        email?: string;
-        bio?: string;
-        image?: string;
-        username?: string;
-        profile_title?: string;
-      };
+      // type updateDataType = {
+      //   name?: string;
+      //   email?: string;
+      //   bio?: string;
+      //   image?: string;
+      //   username?: string;
+      //   profile_title?: string;
+      // };
       const { oldValue, newValue } = args;
-      const updateData: updateDataType = {};
+      const updateData = {};
 
       if (oldValue.name !== newValue.name) {
         updateData.name = newValue.name;
@@ -99,39 +100,41 @@ const resolvers = {
   },
 };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+const startApolloServer = async (app, httpServer) => {
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    context: async ({ req, res }) => {
+      // Get the user token from the headers.
+      const token = req.headers.authorization || "";
 
-const { url } = await startStandaloneServer(server, {
-  listen: {
-    port: PORT,
-  },
-  context: async ({ req, res }) => {
-    // Get the user token from the headers.
-    const token = req.headers.authorization || "";
+      const secret = process.env.AUTH_SECRET;
 
-    const secret = process.env.AUTH_SECRET;
+      if (!secret) {
+        throw new Error("No auth secret");
+      }
 
-    if (!secret) {
-      throw new Error("No auth secret");
-    }
+      const decoded = await decode({
+        token,
+        secret,
+        salt:
+          process.env.NODE_ENV === "production"
+            ? "__Secure-authjs.session-token"
+            : "authjs.session-token",
+      });
 
-    const decoded = await decode({
-      token,
-      secret,
-      salt:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-authjs.session-token"
-          : "authjs.session-token",
-    });
+      console.log("Decoded", decoded);
 
-    console.log("Decoded", decoded);
+      // Add the user to the context
+      return { token: decoded };
+    },
+  });
 
-    // Add the user to the context
-    return { token: decoded as User };
-  },
-});
+  await server.start();
+  server.applyMiddleware({ app });
+};
 
-console.log(`Server ready at port ${PORT}`);
+startApolloServer(app, httpServer);
+
+export default httpServer;

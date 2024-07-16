@@ -1,0 +1,26 @@
+{
+  "name": "treelink-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.17.0",
+    "apollo-server-core": "^3.13.0",
+    "apollo-server-express": "^3.13.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "graphql": "^16.9.0",
+    "next-auth": "^4.24.7"
+  },
+  "devDependencies": {
+    "consola": "^3.2.3",
+    "dotenv": "^16.4.5",
+    "nodemon": "^3.1.4"
+  }
+}

@@ -8,7 +8,7 @@
     "esm": true // <--- this is the most important part
   },
   "compilerOptions": {
-    "rootDirs": ["src", "/"],
+    "rootDirs": ["api", "/", "dev"],
     "outDir": "dist",
     "lib": ["es2020"],
     "module": "ESNext",
@@ -17,6 +17,6 @@
     "moduleResolution": "Node",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["api/**/*.ts", "api/schema.ts", "dev.js", "api/index.js"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }

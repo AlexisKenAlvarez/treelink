@@ -1,5 +1,3 @@
-
-
 export const typeDefs = `#graphql
   type User {
     id: Int!,
@@ -34,4 +32,4 @@ export const typeDefs = `#graphql
     email: String
     profile_title: String
   }
-`
+`;
