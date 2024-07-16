@@ -22,14 +22,14 @@ const Login = () => {
               height={50}
               className="w-6 h-6 shrink-0"
             />
-            <h1 className="uppercase font-bold">Linkme</h1>
+            <h1 className="uppercase font-bold">Treelink</h1>
           </button>
           <Badge variant={"secondary"} className="text-xs">
             Beta
           </Badge>
         </div>
 
-        <h1 className="sm:text-2xl text-xl font-bold">Sign In to your Linkme account</h1>
+        <h1 className="sm:text-2xl text-xl font-bold">Sign In to your Treelink account</h1>
 
         <div className="flex flex-col w-full max-w-sm gap-3">
           <Button onClick={() => {

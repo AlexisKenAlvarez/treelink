@@ -51,18 +51,18 @@ const Hero = () => {
       <div className="p-5">
         <div className="sm:text-center text-left mt-24 space-y-5" id="hero">
           <Badge className="p-2 px-5 bg-gradient-to-br from-accent-secondary to-accent">
-            Linkme is finally out, still in beta.
+            Treelink is finally out, still in beta.
           </Badge>
           <h1 className="sm:text-5xl text-5xl max-w-screen-sm mx-auto font-bold">
             Everything you are. In one simple link in bio.
           </h1>
           <p className="max-w-md sm:mx-auto mx-0">
-            Join 5+ people using Linkme for their link in bio. One link to help
+            Join 5+ people using Treelink for their link in bio. One link to help
             you share everything you create.
           </p>
 
           <div className="flex gap-2 justify-center sm:flex-row flex-col">
-            <Button>Claim your linkme</Button>
+            <Button>Claim your Treelink</Button>
             <Button variant={"outline"}>
               <FaGithub />
               View on Github

@@ -1,7 +1,6 @@
+import { getClient } from "@/lib/client";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
-import { getClient } from "@/lib/client";
-import { gql } from "@apollo/client";
 import { ADD_USER_MUTATION, USER_QUERY } from "./lib/graphql";
 
 declare module "next-auth" {
@@ -23,44 +22,61 @@ declare module "next-auth" {
   }
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    username: string;
+  }
+}
+
+
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn() {
       return true;
     },
-    async session({ session, token }) {
-      const client = getClient();
+    async session({ session, token, trigger }) {
+      session.user.id = token.id as string
+      session.user.username = token.username as string
 
+      return session;
+    },
+    async jwt({ token, trigger, session }) {
+      const client = getClient();
       const { data } = await client.query({
         query: USER_QUERY,
         variables: {
-          email: token.email,
+          email: token.email ?? "",
         },
       });
 
-      if (data.getUser === null) {
-        const { errors } = await client.mutate({
+      if (data.getUser) {
+        token.id = data.getUser.id;
+        token.username = data.getUser.username as string;
+      } else {
+        const { data } = await client.mutate({
           mutation: ADD_USER_MUTATION,
           variables: {
             user: {
-              name: token.name,
-              email: token.email,
-              image: token.picture,
+              name: token.name!,
+              email: token.email!,
+              image: token.picture!,
             },
           },
         });
 
-        if (errors) {
-          console.error(errors);
-        }
-      } else {
-        session.user.username = data.getUser.username;
+        token.id = data?.addUser?.id
       }
 
-      return session;
-    },
-    async jwt({ token, user, account, profile, session }) {
+      if (trigger === "update") {
+        token.username = session.username;
+      }
+
       return token;
     },
   },
