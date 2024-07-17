@@ -15,14 +15,13 @@ const httpServer = http.createServer(app);
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-
 const resolvers = {
   Query: {
     users: () => {
       return prisma.users.findMany();
     },
     getUser: (_, args) => {
-      console.log("🚀 ~ args:", args)
+      console.log("🚀 ~ args:", args);
       return prisma.users.findUnique({
         where: {
           email: args.email,
@@ -93,6 +92,8 @@ const resolvers = {
   },
 };
 
+const secret = process.env.AUTH_SECRET;
+
 const startApolloServer = async (app, httpServer) => {
   const server = new ApolloServer({
     introspection: true,
@@ -103,10 +104,8 @@ const startApolloServer = async (app, httpServer) => {
     context: async ({ req, res }) => {
       // Get the user token from the headers.
       const token = req.headers.authorization || "";
-      console.log("🚀 ~ context: ~ token:", token)
 
-      const secret = process.env.AUTH_SECRET;
-      console.log("🚀 ~ context: ~ secret:", secret)
+      console.log("🚀 ~ secret:", secret);
 
       const decoded = await decode({
         token,
