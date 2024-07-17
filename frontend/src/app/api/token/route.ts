@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
 
   const secret = process.env.AUTH_SECRET;
+  console.log("🚀 ~ GET ~ secret:", secret)
 
   if (!secret) {
     throw new Error("AUTH_SECRET is not defined");
@@ -28,9 +29,10 @@ export async function GET(req: NextRequest) {
       process.env.NODE_ENV === "production"
         ? "__Secure-authjs.session-token"
         : "authjs.session-token",
-  })
+  });
 
-  console.log("🚀 ~ GET ~ decoded:", decoded)
+  console.log("Decoded", decoded);
+
   return NextResponse.json({
     token,
   });

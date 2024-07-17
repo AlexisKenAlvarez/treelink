@@ -1,17 +1,15 @@
 "use client";
 // ^ this file needs the "use client" pragma
 
-import { ApolloLink, HttpLink, from } from "@apollo/client";
+import { from, HttpLink } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+import { onError } from "@apollo/client/link/error";
 import {
-  ApolloNextAppProvider,
   ApolloClient,
-  InMemoryCache,
-  SSRMultipartLink,
+  ApolloNextAppProvider,
+  InMemoryCache
 } from "@apollo/experimental-nextjs-app-support";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
-import { setContext } from "@apollo/client/link/context";
-import { getSession } from "next-auth/react";
-import { getToken } from "next-auth/jwt";
 
 // have a function to create a client for you
 function makeClient() {
@@ -28,29 +26,33 @@ function makeClient() {
   });
 
   const authMiddleware = setContext(async (operation, { headers }) => {
-    try {
-      const { token } = await fetch("/api/token").then((res) => res.json());
+    const { token } = await fetch("/api/token").then((res) => {
+      return res.json();
+    });
 
-      return {
-        headers: {
-          ...headers,
-          authorization: `${token}`,
-        },
-      };
-    } catch (error) {
-      return {
-        headers: {
-          ...headers,
-          authorization: ``,
-        },
-      };
-    }
+    return {
+      headers: {
+        ...headers,
+        authorization: `${token}`,
+      },
+    };
+  });
+
+  const errorLink = onError(({ graphQLErrors, networkError }) => {
+    if (graphQLErrors)
+      graphQLErrors.forEach(({ message, locations, path }) =>
+        console.log(
+          `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+        ),
+      );
+  
+    if (networkError) console.log(`[Network error]: ${networkError}`);
   });
 
   // use the `ApolloClient` from "@apollo/experimental-nextjs-app-support"
   return new ApolloClient({
     // use the `InMemoryCache` from "@apollo/experimental-nextjs-app-support"
-    link: authMiddleware.concat(httpLink),
+    link: from([authMiddleware, errorLink, httpLink]),
     // link: httpLink,
     cache: new InMemoryCache(),
   });

@@ -22,6 +22,7 @@ const resolvers = {
       return prisma.users.findMany();
     },
     getUser: (_, args) => {
+      console.log("🚀 ~ args:", args)
       return prisma.users.findUnique({
         where: {
           email: args.email,
@@ -94,18 +95,18 @@ const resolvers = {
 
 const startApolloServer = async (app, httpServer) => {
   const server = new ApolloServer({
+    introspection: true,
+    cors: false,
     typeDefs,
     resolvers,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     context: async ({ req, res }) => {
       // Get the user token from the headers.
       const token = req.headers.authorization || "";
+      console.log("🚀 ~ context: ~ token:", token)
 
       const secret = process.env.AUTH_SECRET;
-
-      if (!secret) {
-        throw new Error("No auth secret");
-      }
+      console.log("🚀 ~ context: ~ secret:", secret)
 
       const decoded = await decode({
         token,
@@ -124,7 +125,7 @@ const startApolloServer = async (app, httpServer) => {
   });
 
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, cors: false });
 };
 
 startApolloServer(app, httpServer);

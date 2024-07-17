@@ -17,7 +17,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger
+  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +36,8 @@ const AdminDashboard = ({
       email: userData.email,
     },
   });
-  const [updateUser, {loading: updateLoading}] = useMutation(UPDATE_USER_MUTATION);
+  const [updateUser, { loading: updateLoading }] =
+    useMutation(UPDATE_USER_MUTATION);
   const profile_title = z.string().min(1).max(100);
   const bio = z.string().min(1).max(250);
 
@@ -80,7 +81,6 @@ const AdminDashboard = ({
     }
   }, 2000);
 
-
   return (
     <fieldset className="h-full w-full border p-3">
       <legend className="px-2 text-sm">Admin Dashboard</legend>
@@ -110,9 +110,12 @@ const AdminDashboard = ({
           </div>
         </div>
         <div className="relative hidden h-full w-full flex-col items-center space-y-2 rounded-md bg-slate-100 p-5 pt-10 md:flex">
-          <Loader className={cn("absolute hidden top-3 left-3 animate-spin", {
-            "block": updateLoading
-          })} size={18} />
+          <Loader
+            className={cn("absolute left-3 top-3 hidden animate-spin", {
+              block: updateLoading,
+            })}
+            size={18}
+          />
           <LinkPreview user={user} />
         </div>
 
