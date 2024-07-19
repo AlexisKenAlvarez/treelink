@@ -14,6 +14,28 @@ export const USER_QUERY = gql(`
   }
 `);
 
+export const USER_QUERY_WITH_LINK = gql(`
+  query GetUserWithLink($email: String!) {
+    getUser(email: $email) {
+      links {
+        id
+        title
+        order
+        url
+        uploaded_icon
+        show_icon
+      }
+      bio
+      email
+      id
+      image
+      name
+      username
+      profile_title
+    }
+  }
+`);
+
 export const ADD_USER_MUTATION = gql(`
   mutation AddUserMutation($user: AddUserInput!) {
     addUser(user: $user) {
@@ -32,3 +54,22 @@ export const UPDATE_USER_MUTATION = gql(`
     }
   }
 `);
+
+export const ADD_LINK_MUTATION = gql(`
+  mutation AddLinkMutation($value: AddLinkInput!) {
+  addLink(value: $value) {
+    order
+    show_icon
+    title
+    uploaded_icon
+    url
+  }
+}
+  `);
+
+export const UPDATE_LINK_MUTATION = gql(`
+  mutation UpdateLinkMutation($value: UpdateLinkInput!) {
+  updateLink(value: $value) {
+    id
+  }
+}`);

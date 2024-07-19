@@ -16,6 +16,18 @@ model Users {
   image         String?
   id            Int     @id @default(autoincrement())
   profile_title String
+  Links         Links[]
 
   @@index([email])
+}
+
+model Links {
+  id            Int     @id @default(autoincrement())
+  user_id       Int
+  user          Users?  @relation(fields: [user_id], references: [id])
+  order         Int
+  title         String
+  url           String
+  show_icon     Boolean
+  uploaded_icon String?
 }

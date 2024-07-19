@@ -1,18 +1,31 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { GetUserQueryQuery } from "@/__generated__/graphql";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { UPDATE_USER_MUTATION, USER_QUERY } from "@/lib/graphql";
-import { useMutation, useQuery } from "@apollo/client";
 import {
-  DragDropContext,
-  Draggable,
-  DraggableProvidedDragHandleProps,
-  Droppable,
-} from "@hello-pangea/dnd";
+  ADD_LINK_MUTATION,
+  UPDATE_LINK_MUTATION,
+  UPDATE_USER_MUTATION,
+  USER_QUERY,
+  USER_QUERY_WITH_LINK,
+} from "@/lib/graphql";
+import { useMutation, useQuery } from "@apollo/client";
+import { useDebounceCallback } from "usehooks-ts";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { SocialIcon } from "react-social-icons";
+import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useState } from "react";
+import { useDropzone } from "@uploadthing/react";
+import { generateClientDropzoneAccept } from "uploadthing/client";
+import { useUploadThing } from "@/utils/uploadthing";
 import {
   CircleHelp,
   GripVertical,
@@ -21,12 +34,9 @@ import {
   Plus,
   ScanEye,
   Trash,
+  Image as ImageIcon,
+  Upload,
 } from "lucide-react";
-import Image from "next/image";
-import { useDebounceCallback } from "usehooks-ts";
-import { z } from "zod";
-
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -34,27 +44,38 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { useCallback, useState } from "react";
-
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SocialIcon } from "react-social-icons";
-import { Switch } from "@/components/ui/switch";
-import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import {
+  DragDropContext,
+  Draggable,
+  DraggableProvidedDragHandleProps,
+  Droppable,
+} from "@hello-pangea/dnd";
+import { toast } from "sonner";
 
 const DEBOUNCE_TIME = 1500;
 
 interface Links {
-  id: string;
+  id: number;
   title: string;
   url: string;
   show_icon: boolean;
+  uploaded_icon: string | null | undefined;
 }
 
 const AdminDashboard = ({
@@ -62,14 +83,23 @@ const AdminDashboard = ({
 }: {
   userData: NonNullable<GetUserQueryQuery["getUser"]>;
 }) => {
-  const { data: user, refetch } = useQuery(USER_QUERY, {
+  const { data: user, refetch } = useQuery(USER_QUERY_WITH_LINK, {
     variables: {
       email: userData.email,
     },
   });
-  const [links, setLinks] = useState<Links[]>([]);
+
   const [updateUser, { loading: updateLoading }] =
     useMutation(UPDATE_USER_MUTATION);
+
+  const [updateLink, { loading: isUpdateLoading }] =
+    useMutation(UPDATE_LINK_MUTATION);
+
+  const [createLinkMutation, { loading: isCreateLoading }] =
+    useMutation(ADD_LINK_MUTATION);
+
+  const [links, setLinks] = useState<Links[]>([]);
+
   const profile_title = z.string().min(1).max(100);
   const bio = z.string().min(1).max(250);
 
@@ -125,13 +155,50 @@ const AdminDashboard = ({
               item.show_icon !== link.show_icon
                 ? link.show_icon
                 : item.show_icon,
+            uploaded_icon:
+              item.uploaded_icon !== link.uploaded_icon
+                ? link.uploaded_icon
+                : item.uploaded_icon,
           };
         }
-
         return item;
       }),
     );
   }, []);
+
+  const handleEditLink = useCallback(async (link: Links) => {
+    try {
+      await updateLink({
+        variables: {
+          value: {
+            id: link.id,
+            title: link.title,
+            url: link.url,
+            show_icon: link.show_icon,
+          },
+        },
+      });
+    } catch (error) {
+      toast.error("Error occurred while updating the order of the links");
+      console.log(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.getUser?.links) {
+      setLinks([
+        ...user?.getUser?.links?.map((link) => {
+          return {
+            id: link.id,
+            title: link.title,
+            url: link.url,
+            show_icon: link.show_icon,
+            uploaded_icon: link.uploaded_icon,
+          };
+        }),
+      ]);
+    }
+  }, [user]);
 
   return (
     <fieldset className="h-full w-full border border-dashed p-3">
@@ -164,20 +231,31 @@ const AdminDashboard = ({
 
             <Button
               className="w-full rounded-md bg-accent hover:bg-accent/80"
-              onClick={() =>
-                setLinks((current) => [
-                  ...current,
-                  {
-                    id: String(current.length + 1),
-                    title: "",
-                    url: "",
-                    show_icon: false,
+              disabled={isCreateLoading}
+              onClick={async () => {
+                await createLinkMutation({
+                  variables: {
+                    value: {
+                      user_id: userData.id,
+                      order: links.length + 1,
+                      title: "",
+                      url: "",
+                      show_icon: false,
+                    },
                   },
-                ])
-              }
+                });
+
+                await refetch();
+              }}
             >
-              <Plus size={18} />
-              Add link
+              {isCreateLoading ? (
+                <Loader size={18} className="animate-spin" />
+              ) : (
+                <>
+                  <Plus size={18} />
+                  Add link
+                </>
+              )}
             </Button>
           </div>
 
@@ -192,6 +270,22 @@ const AdminDashboard = ({
               );
 
               setLinks(items);
+
+              Promise.all(
+                items.map((link, index) => {
+                  updateLink({
+                    variables: {
+                      value: {
+                        id: link.id,
+                        order: index + 1,
+                        title: link.title,
+                        url: link.url,
+                        show_icon: link.show_icon,
+                      },
+                    },
+                  });
+                }),
+              );
             }}
           >
             <Droppable droppableId="links">
@@ -204,7 +298,7 @@ const AdminDashboard = ({
                   {links.map((link, index) => (
                     <Draggable
                       key={link.id}
-                      draggableId={link.id}
+                      draggableId={link.id.toString()}
                       index={index}
                     >
                       {(provided) => (
@@ -218,6 +312,7 @@ const AdminDashboard = ({
                             link={link}
                             dragProps={provided.dragHandleProps}
                             handleLinkChange={handleLinkChange}
+                            handleEditLink={handleEditLink}
                           />
                           <div className="h-2 w-full"></div>
                         </li>
@@ -263,38 +358,98 @@ const LinkComponent = ({
   link,
   dragProps,
   handleLinkChange,
+  handleEditLink,
 }: {
   link: Links;
   dragProps: DraggableProvidedDragHandleProps | null;
   handleLinkChange: (link: Links) => void;
+  handleEditLink: (link: Links) => void;
 }) => {
-  const link_title = z.string().min(1).max(100);
-  const url = z.string().min(1).max(250);
+  const [link_values, setLinkValues] = useState<Links>({
+    id: link.id,
+    title: link.title,
+    url: link.url,
+    show_icon: link.show_icon,
+    uploaded_icon: link.uploaded_icon,
+  });
 
-  const handleChangeTitle = useDebounceCallback(async (value: string) => {
-    console.log("🚀 ~ handleChangeTitle ~ value:", value);
+  const handleEdit = useDebounceCallback(async () => {
     try {
-      link_title.parse(value);
+      handleLinkChange(link_values);
+      handleEditLink(link_values);
     } catch (error) {
       console.log(error);
     }
   }, DEBOUNCE_TIME);
 
-  const handleChangeUrl = useDebounceCallback(async (value: string) => {
-    try {
-      url.parse(value);
-    } catch (error) {
-      console.log(error);
-    }
-  }, DEBOUNCE_TIME);
+  const handleChangeValues = useDebounceCallback(
+    ({
+      value,
+      change,
+    }: {
+      value: string;
+      change: "title" | "url" | "show_icon";
+    }) => {
+      if (change === "title") {
+        setLinkValues({
+          id: link.id,
+          title: value,
+          url: link.url,
+          show_icon: link.show_icon,
+          uploaded_icon: link.uploaded_icon,
+        });
+      } else if (change === "url") {
+        setLinkValues({
+          id: link.id,
+          title: link.title,
+          url: value,
+          show_icon: link.show_icon,
+          uploaded_icon: link.uploaded_icon,
+        });
+      }
+    },
+    DEBOUNCE_TIME,
+  );
 
-  const handleIconChange = useDebounceCallback(async (value: boolean) => {
-    try {
-      console.log(value);
-    } catch (error) {
-      console.log(error);
-    }
-  }, DEBOUNCE_TIME);
+  const handleChangeCheck = ({ value }: { value: boolean }) => {
+    setLinkValues({
+      id: link.id,
+      title: link.title,
+      url: link.url,
+      show_icon: value,
+      uploaded_icon: link.uploaded_icon,
+    });
+  };
+
+  const [files, setFiles] = useState<File[]>([]);
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setFiles(acceptedFiles);
+  }, []);
+
+  const { startUpload, permittedFileInfo } = useUploadThing("imageUploader", {
+    onClientUploadComplete: () => {
+      alert("uploaded successfully!");
+    },
+    onUploadError: () => {
+      alert("error occurred while uploading");
+    },
+    onUploadBegin: () => {
+      alert("upload has begun");
+    },
+  });
+
+  const fileTypes = permittedFileInfo?.config
+    ? Object.keys(permittedFileInfo?.config)
+    : [];
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: fileTypes ? generateClientDropzoneAccept(fileTypes) : undefined,
+  });
+
+  useEffect(() => {
+    handleEdit();
+  }, [link_values]);
 
   return (
     <div className="flex w-full items-center gap-2 space-y-2 rounded-md border bg-white p-2 pb-3 pr-4 shadow-sm">
@@ -309,16 +464,10 @@ const LinkComponent = ({
             placeholder="Type your title here"
             onChange={(e) => {
               const value = e.target.value;
-              handleLinkChange({
-                id: link.id,
-                title: value,
-                url: link.url,
-                show_icon: link.show_icon,
-              });
-              handleChangeTitle(value);
+              handleChangeValues({ value, change: "title" });
             }}
             maxLength={100}
-            defaultValue={link.title}
+            defaultValue={link_values.title}
           />
         </div>
 
@@ -329,21 +478,72 @@ const LinkComponent = ({
             id="url"
             onChange={(e) => {
               const value = e.target.value;
-              handleLinkChange({
-                id: link.id,
-                title: link.title,
-                url: value,
-                show_icon: link.show_icon,
-              });
-              handleChangeUrl(value);
+              handleChangeValues({ value, change: "url" });
             }}
             maxLength={250}
-            defaultValue={link.url}
+            defaultValue={link_values.url}
           />
         </div>
 
         <div className="flex items-center justify-between">
           <div className="space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Dialog>
+                    <DialogTrigger>
+                      <ImageIcon
+                        size={18}
+                        strokeWidth={1.2}
+                        className="opacity-50 transition-all duration-300 ease-in-out hover:opacity-100"
+                      />
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Upload an icon</DialogTitle>
+                        <DialogDescription>
+                          This will override the default icon that we provide
+                          based on the URL input.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex w-full flex-col items-center justify-center gap-3">
+                        <div className="flex w-24 flex-col items-center justify-center space-y-2">
+                          <SocialIcon
+                            url={link.url}
+                            className=""
+                            as="div"
+                            style={{ width: 40, height: 40 }}
+                          />
+                          <p className="text-xs">Current icon</p>
+                        </div>
+
+                        <div
+                          {...getRootProps()}
+                          className="inset flex w-full cursor-pointer items-center justify-center rounded-xl bg-slate-100 py-4 outline-dashed outline-black/20"
+                        >
+                          <input {...getInputProps()} />
+                          <div className="flex flex-col items-center gap-1 opacity-60">
+                            <Upload />
+                            <p className="text-sm">Drop files here!</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <DialogFooter className="mt-2 flex w-full gap-1">
+                        <Button className="w-full" variant={"destructive"}>
+                          Reset to default
+                        </Button>
+                        <Button className="w-full">Save</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Upload icon</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
@@ -403,19 +603,14 @@ const LinkComponent = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Label htmlFor="thumbnail">Show thumbnail</Label>
+            <Label htmlFor="thumbnail">Show icon</Label>
 
             <Switch
+              checked={link_values.show_icon}
               id="thumbnail"
               className="bg-accent"
               onCheckedChange={(value) => {
-                handleLinkChange({
-                  id: link.id,
-                  title: link.title,
-                  url: link.url,
-                  show_icon: value,
-                });
-                handleIconChange(value);
+                handleChangeCheck({ value });
               }}
             />
           </div>
@@ -467,7 +662,9 @@ const LinkPreview = ({
         ))}
       </div>
 
-      <p className="absolute bottom-10 left-0 right-0 mx-auto w-fit font-medium">Join Treelink</p>
+      <p className="absolute bottom-10 left-0 right-0 mx-auto w-fit font-medium">
+        Join Treelink
+      </p>
     </>
   );
 };

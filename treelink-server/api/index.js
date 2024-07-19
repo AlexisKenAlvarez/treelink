@@ -17,11 +17,32 @@ const prisma = new PrismaClient();
 
 const resolvers = {
   Query: {
-    users: () => {
-      return prisma.users.findMany();
+    users: async () => {
+      return await prisma.users.findMany();
     },
-    getUser: (_, args) => {
-      console.log("🚀 ~ args:", args);
+    user: async (_, args) => {
+      console.log("🚀 ~ user: ~ args:", args);
+      return await prisma.users.findUnique({
+        where: {
+          id: args.id,
+        },
+      });
+    },
+    link: async (_, args) => {
+      return await prisma.links.findUnique({
+        where: {
+          id: args.id,
+        },
+      });
+    },
+    links: async (_, args) => {
+      return await prisma.links.findMany({
+        where: {
+          id: args.id,
+        },
+      });
+    },
+    getUser: async (_, args) => {
       return prisma.users.findUnique({
         where: {
           email: args.email,
@@ -30,8 +51,8 @@ const resolvers = {
     },
   },
   Mutation: {
-    addUser: (_, args) => {
-      return prisma.users.create({
+    addUser: async (_, args) => {
+      return await prisma.users.create({
         data: {
           id: args.user.id,
           name: args.user.name,
@@ -43,8 +64,16 @@ const resolvers = {
         },
       });
     },
-    updateUser: (_, args, ctx) => {
+    updateUser: async (_, args, ctx) => {
       const user = ctx.token;
+
+      if (!user) {
+        return new Error("You are not authorized");
+      }
+
+      if (args.oldValue?.id !== user?.id) {
+        return new Error("You are not authorized");
+      }
 
       const { oldValue, newValue } = args;
       const updateData = {};
@@ -69,15 +98,9 @@ const resolvers = {
         updateData.profile_title = newValue.profile_title;
       }
 
-      if (args.oldValue?.id === user?.id) {
-        console.log("This is the correct user that requested it");
-      } else {
-        console.log("Incorrect user!");
-      }
-
       try {
         if (Object.keys(updateData).length > 0) {
-          return prisma.users.update({
+          return await prisma.users.update({
             where: {
               id: oldValue.id,
             },
@@ -88,6 +111,81 @@ const resolvers = {
         console.log("Error updating the user");
         console.log(error);
       }
+    },
+    addLink: async (_, args) => {
+      return await prisma.links.create({
+        data: {
+          order: args.value.order,
+          title: args.value.title,
+          url: args.value.url,
+          show_icon: args.value.show_icon,
+          uploaded_icon: args.value.uploaded_icon,
+          user_id: args.value.user_id,
+        },
+      });
+    },
+    updateLink: async (_, args, ctx) => {
+      const user = ctx.token;
+
+      const data = await prisma.links.findUnique({
+        where: {
+          id: args.value.id,
+        },
+      });
+
+      if (!user) {
+        console.log("Hindi lumagpas as authorization");
+        return new Error("You are not authorized");
+      }
+
+      if (data.user_id !== user.id) {
+        return new Error("You are not authorized");
+      }
+
+      if (!data) {
+        return new Error("Link not found");
+      }
+
+      const updateData = {};
+
+      if (args.value?.order !== data.order) {
+        updateData.order = args.value.order;
+      }
+
+      if (args.value.title !== data.title) {
+        updateData.title = args.value.title;
+      }
+
+      if (args.value.url !== data.url) {
+        updateData.url = args.value.url;
+      }
+
+      if (args.value.show_icon !== data.show_icon) {
+        updateData.show_icon = args.value.show_icon;
+      }
+
+      if (args.value.uploaded_icon !== data.uploaded_icon) {
+        updateData.uploaded_icon = args.value.uploaded_icon;
+      }
+
+      return await prisma.links.update({
+        where: {
+          id: args.value.id,
+        },
+        data: updateData,
+      });
+    },
+  },
+  User: {
+    links: async (parent) => {
+      return await prisma.links.findMany({
+        where: {
+          user_id: parent.id,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      });
     },
   },
 };

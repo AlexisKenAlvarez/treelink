@@ -1,0 +1,17 @@
+{
+  "name": "treelink",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"cd treelink-server && bun run dev\" \"cd frontend && bun dev\""
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
