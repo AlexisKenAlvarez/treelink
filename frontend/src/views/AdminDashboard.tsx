@@ -2,8 +2,10 @@
 "use client";
 
 import {
+  Exact,
   GetUserQueryQuery,
   GetUserWithLinkQuery,
+  Scalars,
 } from "@/__generated__/graphql";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +47,7 @@ import {
 } from "@/lib/graphql";
 import { cn } from "@/lib/utils";
 import { useUploadThing } from "@/utils/uploadthing";
-import { useMutation, useQuery } from "@apollo/client";
+import { ApolloQueryResult, useMutation, useQuery } from "@apollo/client";
 import { useDropzone } from "@uploadthing/react";
 import {
   CircleHelp,
@@ -72,6 +74,7 @@ import {
   Droppable,
 } from "@hello-pangea/dnd";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DEBOUNCE_TIME = 1500;
 
@@ -88,7 +91,12 @@ const AdminDashboard = ({
 }: {
   userData: NonNullable<GetUserQueryQuery["getUser"]>;
 }) => {
-  const { data: user, refetch } = useQuery(USER_QUERY_WITH_LINK, {
+  const {
+    data: user,
+    refetch,
+    loading: userQueryLoading,
+    client
+  } = useQuery(USER_QUERY_WITH_LINK, {
     variables: {
       email: userData.email,
     },
@@ -153,6 +161,7 @@ const AdminDashboard = ({
   }, DEBOUNCE_TIME);
 
   const handleEditLink = useCallback(async (link: Links) => {
+    console.log("🚀 ~ handleEditLink ~ link:", link);
     try {
       await updateLink({
         variables: {
@@ -183,7 +192,6 @@ const AdminDashboard = ({
     }
   }, []);
 
-
   const handleDeleteLink = useCallback(async (id: number) => {
     try {
       await deleteLinkMutation({
@@ -195,6 +203,7 @@ const AdminDashboard = ({
     } catch (error) {
       console.log(error);
     }
+    
   }, []);
 
   useEffect(() => {
@@ -211,6 +220,7 @@ const AdminDashboard = ({
         }),
       ]);
     }
+
   }, [user]);
 
   return (
@@ -331,6 +341,7 @@ const AdminDashboard = ({
                             handleEditLink={handleEditLink}
                             handleRemoveImage={handleRemoveImage}
                             handleDeleteLink={handleDeleteLink}
+                            refetch={refetch}
                           />
                           <div className="h-2 w-full"></div>
                         </li>
@@ -356,7 +367,11 @@ const AdminDashboard = ({
             <Loader className="animate-spin" size={18} />
             <p className="text-sm">Saving</p>
           </div>
-          <LinkPreview user={user} links={links} />
+          {userQueryLoading ? (
+            <PreviewSkeleton />
+          ) : (
+            <LinkPreview user={user} links={links} />
+          )}
         </div>
 
         <Drawer>
@@ -384,17 +399,25 @@ const LinkComponent = ({
   handleEditLink,
   handleRemoveImage,
   handleDeleteLink,
+  refetch,
 }: {
   link: Links;
   dragProps: DraggableProvidedDragHandleProps | null;
   handleEditLink: (link: Links) => void;
   handleRemoveImage: (id: number) => void;
   handleDeleteLink: (id: number) => void;
+  refetch: (
+    variables?:
+      | Partial<
+          Exact<{
+            email: Scalars["String"]["input"];
+          }>
+        >
+      | undefined,
+  ) => Promise<ApolloQueryResult<GetUserWithLinkQuery>>;
 }) => {
   const [title, setTitle] = useState(link.title);
-  console.log("🚀 ~ title:", title);
   const [url, setUrl] = useState(link.url);
-  console.log("🚀 ~ url:", url);
   const [show_icon, setShowIcon] = useState(link.show_icon);
   const [uploaded_icon, setUploadedIcon] = useState(link.uploaded_icon);
 
@@ -435,7 +458,19 @@ const LinkComponent = ({
     setFiles(acceptedFiles);
   }, []);
 
-  const { startUpload, permittedFileInfo } = useUploadThing("imageUploader");
+  const { startUpload, permittedFileInfo } = useUploadThing("imageUploader", {
+    onUploadBegin: (progress) => {
+      toast.loading("Uploading image", {
+        id: "uploading",
+        duration: 100,
+      });
+    },
+    onClientUploadComplete: async () => {
+      await refetch();
+      toast.dismiss("uploading");
+      toast.success("Image uploaded successfully");
+    },
+  });
 
   const fileTypes = permittedFileInfo?.config
     ? Object.keys(permittedFileInfo?.config)
@@ -554,6 +589,7 @@ const LinkComponent = ({
                             variant={"destructive"}
                             onClick={async () => {
                               handleRemoveImage(link.id);
+                              setUploadedIcon(undefined);
                             }}
                           >
                             Reset to default
@@ -731,6 +767,32 @@ const LinkPreview = ({
                 )
               ) : null}
             </div>
+          ))}
+        </div>
+
+        <p className="left-0 right-0 mx-auto mt-10 w-fit text-sm font-bold uppercase">
+          Join Treelink
+        </p>
+      </div>
+    </>
+  );
+};
+
+const PreviewSkeleton = () => {
+  return (
+    <>
+      <div className="relative z-10 flex w-full flex-col items-center">
+        <Skeleton className="h-20 w-20 rounded-full bg-white" />
+        <div className="mt-2 text-center">
+          <Skeleton className="h-6 w-44 bg-white" />
+        </div>
+
+        <div className="mt-4 w-full max-w-xs space-y-4">
+          {[...new Array(3)].map((_, index) => (
+            <Skeleton
+              className="shadowed-button relative flex h-14 w-full items-center justify-center rounded-full border border-black bg-white"
+              key={index}
+            ></Skeleton>
           ))}
         </div>
 

@@ -1,8 +1,13 @@
 "use client";
 
 import { GetUsernameUserQuery } from "@/__generated__/graphql";
+import { Button } from "@/components/ui/button";
+import { getClient } from "@/lib/client";
+import { GET_USER_WITH_USERNAME } from "@/lib/graphql";
+import { useQuery } from "@apollo/client";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
 import { SocialIcon } from "react-social-icons";
 
 const UserOverview = ({
@@ -10,21 +15,36 @@ const UserOverview = ({
 }: {
   user: NonNullable<GetUsernameUserQuery["getUserWithUsername"]>;
 }) => {
-  console.log("🚀 ~ UserOverview ~ user:", user);
+  const { client } = useQuery(GET_USER_WITH_USERNAME);
+  useEffect(() => {
+    client.clearStore();
+  }, []);
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center">
-      <Image alt="User" width={1000} height={1000} src={user.image} className="absolute top-0 left-0 bottom-0 right-0" />
-      <div className="relative z-10 flex w-full flex-col items-center">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-5">
+      <div className="absolute bottom-0 left-0 right-0 top-0 h-screen w-[100vw]">
+        <Image
+          alt="User"
+          width={1000}
+          height={1000}
+          src={user.image}
+          className="relative h-full w-full object-cover"
+        />
+        <div className="absolute left-0 top-0 z-10 h-full w-full bg-white/70 backdrop-blur-xl"></div>
+        <div className="noise-background absolute left-0 top-0 z-20 h-full w-full"></div>
+      </div>
+
+      <div className="relative z-30 flex w-full flex-col items-center">
         <Image
           src={(user.image as string) ?? ""}
           alt={user.name as string}
           width={500}
           height={500}
-          className="w-20 rounded-full"
+          className="w-24 rounded-full"
         />
         <div className="mt-2 text-center">
-          <h1 className="font-bold">@{user.profile_title}</h1>
-          <h1 className="text-sm">{user.bio}</h1>
+          <h1 className="text-xl font-bold">@{user.profile_title}</h1>
+          <h1 className="">{user.bio}</h1>
         </div>
 
         <div className="mt-4 w-full max-w-xs space-y-4">
@@ -35,7 +55,7 @@ const UserOverview = ({
               className="shadowed-button relative flex h-14 w-full items-center justify-center rounded-full border border-black bg-white"
               key={link.id}
             >
-              <p className="text-black">{link.title}</p>
+              <p className="font-medium text-black">{link.title}</p>
 
               {link.show_icon ? (
                 link.uploaded_icon ? (
@@ -63,9 +83,21 @@ const UserOverview = ({
           ))}
         </div>
 
-        <p className="left-0 right-0 mx-auto mt-10 w-fit text-sm font-bold uppercase">
-          Join Treelink
-        </p>
+        <Button variant={"secondary"} className="mt-20 bg-white" asChild>
+          <Link
+            href="/login"
+            className="left-0 right-0 mx-auto w-fit text-sm uppercase"
+          >
+            <Image
+              alt="logo"
+              width={150}
+              height={150}
+              src="/logo.png"
+              className="w-5"
+            />
+            <p className="!font-bold">Join Treelink</p>
+          </Link>
+        </Button>
       </div>
     </div>
   );

@@ -52,7 +52,6 @@ const resolvers = {
       });
     },
     getUserWithUsername: async (_, args) => {
-      console.log("🚀 ~ getUserWithUsername: ~ args:", args);
       return prisma.users.findUnique({
         where: {
           username: args.username ?? "",
@@ -75,6 +74,7 @@ const resolvers = {
       });
     },
     updateUser: async (_, args, ctx) => {
+
       const { value } = args;
 
       const updateUserQuery = async () => {
@@ -105,7 +105,7 @@ const resolvers = {
           if (Object.keys(updateData).length > 0) {
             return await prisma.users.update({
               where: {
-                id: oldValue.id,
+                id: value.id,
               },
               data: updateData,
             });
@@ -127,7 +127,7 @@ const resolvers = {
         return new Error("You are not authorized");
       }
 
-      if (args.oldValue?.id !== user?.id) {
+      if (args.value.id !== user?.id) {
         return new Error("You are not authorized");
       }
 
@@ -149,13 +149,13 @@ const resolvers = {
       const user = ctx.token;
       const service_role = ctx.token.service_role;
 
-      const updateLinkQuery = async () => {
-        const data = await prisma.links.findUnique({
-          where: {
-            id: args.value.id,
-          },
-        });
+      const data = await prisma.links.findUnique({
+        where: {
+          id: args.value.id,
+        },
+      });
 
+      const updateLinkQuery = async () => {
         const values = ["order", "title", "url", "show_icon", "uploaded_icon"];
         const updateData = {};
 

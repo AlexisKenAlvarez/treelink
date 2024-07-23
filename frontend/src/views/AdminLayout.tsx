@@ -16,7 +16,7 @@ import {
 import { Session } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ReactNode } from "react";
 import {
   Sheet,
@@ -34,7 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SignOut } from "@/lib/auth-function";
+import revalidateUserPath, { SignOut } from "@/lib/auth-function";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@apollo/client";
 import { USER_QUERY } from "@/lib/graphql";
@@ -72,17 +72,29 @@ const AdminLayout = ({
     },
   });
 
+  const router = useRouter();
+
   return (
     <AnimatePresence>
       {loading ? (
-        <motion.div key={"loader"} exit={{opacity: 0}} transition={{duration: 1}} className="flex fixed z-10 top-0 left-0 h-screen w-full items-center justify-center">
+        <motion.div
+          key={"loader"}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1 }}
+          className="fixed left-0 top-0 z-10 flex h-screen w-full items-center justify-center"
+        >
           <div className="flex flex-col items-center gap-2">
             <Loader className="animate-spin" />
             <p className="text-lg font-bold">TREELINK</p>
           </div>
         </motion.div>
       ) : (
-        <motion.div initial={{opacity: 0}} animate={{opacity: 100}} transition={{duration: 0.5}} className="min-h-screen w-full p-2">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 100 }}
+          transition={{ duration: 0.5 }}
+          className="min-h-screen w-full p-2"
+        >
           <div className="flex h-[calc(100vh-1rem)] w-full rounded-md border">
             <div className="hidden h-full w-56 shrink-0 flex-col border-r transition-all duration-300 ease-in-out lg:flex">
               <Navigation user={data?.getUser} />
@@ -102,13 +114,24 @@ const AdminLayout = ({
                     <Navigation user={data?.getUser} />
                   </SheetContent>
                 </Sheet>
-                <Button variant={"outline"}>
-                  <span className="hidden sm:block">
-                    🔥Your Treelink is live:
-                  </span>{" "}
-                  <span className="underline">
-                    treelink.one&#47;{data?.getUser?.username}
-                  </span>
+                <Button
+                  variant={"outline"}
+                  className="w-fit"
+                  onClick={() => {
+                    revalidateUserPath({
+                      username: data?.getUser?.username ?? "",
+                    });
+                    router.push("/" + data?.getUser?.username);
+                  }}
+                >
+                  <>
+                    <span className="hidden sm:block">
+                      🔥Your Treelink is live:
+                    </span>{" "}
+                    <span className="underline">
+                      treelink.one&#47;{data?.getUser?.username}
+                    </span>
+                  </>
                 </Button>
 
                 <Button variant={"outline"}>
@@ -181,13 +204,13 @@ const Navigation = ({ user }: { user: GetUserQueryQuery["getUser"] }) => {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex h-10 pr-2 w-full items-center gap-3 rounded-full border border-slate-200">
+              <button className="flex h-10 w-full items-center gap-3 rounded-full border border-slate-200 pr-2">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.image ?? ""} />
                   <AvatarFallback>TL</AvatarFallback>
                 </Avatar>
 
-                <p className="font-medium truncate">@{user?.username}</p>
+                <p className="truncate font-medium">@{user?.username}</p>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start">

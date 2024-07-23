@@ -73,4 +73,8 @@
     -webkit-box-shadow: 2px 2.5px 0px 1px rgba(0, 0, 0, 0.75);
     -moz-box-shadow: 2px 2.5px 0px 1px rgba(0, 0, 0, 0.75);
   }
+
+  .noise-background {
+    background-image: url('/noise-light.png');
+  }
 }

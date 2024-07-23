@@ -38,11 +38,11 @@ const Login = () => {
             <FcGoogle size={16} />
             <span>Continue with Google</span>
           </Button>
-          <Button variant={"outline"}>
+          <Button variant={"outline"} disabled>
             <FaGithub size={16} />
             <span>Continue with Github</span>
           </Button>
-          <Button variant={"outline"}>
+          <Button variant={"outline"} disabled>
             <FaFacebook size={16} />
             <span>Continue with Facebook</span>
           </Button>
