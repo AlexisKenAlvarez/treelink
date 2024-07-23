@@ -129,7 +129,7 @@ const AdminLayout = ({
                       🔥Your Treelink is live:
                     </span>{" "}
                     <span className="underline">
-                      treelink.one&#47;{data?.getUser?.username}
+                      treelink.ink&#47;{data?.getUser?.username}
                     </span>
                   </>
                 </Button>
