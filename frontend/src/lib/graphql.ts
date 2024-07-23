@@ -32,8 +32,34 @@ export const USER_QUERY_WITH_LINK = gql(`
       name
       username
       profile_title
+      premium
+      privacy
     }
   }
+`);
+
+export const GET_USER_WITH_USERNAME = gql(`
+  query GetUsernameUser($username: String!) {
+  getUserWithUsername(username: $username) {
+    id
+    email
+    username
+    name
+    bio
+    image
+    profile_title
+    links {
+      id
+      order
+      title
+      url
+      show_icon
+      uploaded_icon
+    }
+    premium
+    privacy
+  }
+}
 `);
 
 export const ADD_USER_MUTATION = gql(`
@@ -47,12 +73,14 @@ export const ADD_USER_MUTATION = gql(`
 `);
 
 export const UPDATE_USER_MUTATION = gql(`
-  mutation Mutation($oldValue: UpdateUserInput!, $newValue: UpdateUserInput!) {
-    updateUser(oldValue: $oldValue, newValue: $newValue) {
-      username
-      id
-    }
+  mutation Mutation($value: UpdateUserInput!) {
+    updateUser(value: $value) {
+    id
+    email
+    username
   }
+}
+
 `);
 
 export const ADD_LINK_MUTATION = gql(`
@@ -73,3 +101,27 @@ export const UPDATE_LINK_MUTATION = gql(`
     id
   }
 }`);
+
+export const REMOVE_IMAGE_MUTATION = gql(`
+  mutation RemoveImageMutation($removeImageId: Int!) {
+  removeImage(id: $removeImageId) {
+    id
+  }
+}
+  `);
+
+export const DELETE_LINK_MUTATION = gql(`
+  mutation DeleteLinkMutation($removeImageId: Int!) {
+  deleteLink(id: $removeImageId) {
+    id
+  }
+}
+  `);
+
+export const EDIT_BACKGROUND_MUTATION = gql(`
+  mutation EditBackgroundMutation($editBackgroundId: Int!, $action: String!, $image: String) {
+  editBackground(id: $editBackgroundId, action: $action, image: $image) {
+    id
+  }
+}
+  `);

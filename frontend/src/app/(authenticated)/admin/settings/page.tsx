@@ -1,7 +1,7 @@
 const page = () => {
   return (
-    <div>
-      Enter
+    <div className="h-full grid place-content-center">
+      Coming Soon
     </div>
   );
 }

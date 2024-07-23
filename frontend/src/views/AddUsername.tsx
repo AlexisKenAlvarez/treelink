@@ -26,7 +26,7 @@ const AddUsername = () => {
   const router = useRouter();
 
   const { data: session, update } = useSession();
-  console.log("🚀 ~ AddUsername ~ session:", session)
+  console.log("🚀 ~ AddUsername ~ session:", session);
   const [addUsername, { loading }] = useMutation(UPDATE_USER_MUTATION);
 
   const formSchema = z.object({
@@ -47,11 +47,8 @@ const AddUsername = () => {
     try {
       await addUsername({
         variables: {
-          oldValue: {
+          value: {
             id: parseInt(session?.user.id ?? ""),
-            username: session?.user.username,
-          },
-          newValue: {
             username: values.username,
           },
         },
@@ -60,15 +57,15 @@ const AddUsername = () => {
         username: values.username,
       });
 
-      window.location.reload()
+      window.location.reload();
     } catch (error) {
       console.log(error);
     }
   }
 
   return (
-    <div className="w-full h-screen flex">
-      <div className="w-full flex flex-col items-center justify-center gap-4 p-3">
+    <div className="flex h-screen w-full">
+      <div className="flex w-full flex-col items-center justify-center gap-4 p-3">
         <div className="flex items-center gap-2">
           <button className="flex gap-2" onClick={() => router.push("/")}>
             <Image
@@ -76,9 +73,9 @@ const AddUsername = () => {
               alt="logo"
               width={50}
               height={50}
-              className="w-6 h-6 shrink-0"
+              className="h-6 w-6 shrink-0"
             />
-            <h1 className="uppercase font-bold">Treelink</h1>
+            <h1 className="font-bold uppercase">Treelink</h1>
           </button>
           <Badge variant={"secondary"} className="text-xs">
             Beta
@@ -86,15 +83,15 @@ const AddUsername = () => {
         </div>
 
         <div className="text-center">
-          <h1 className="sm:text-2xl text-xl font-bold">
+          <h1 className="text-xl font-bold sm:text-2xl">
             Welcome to Treelink!
           </h1>
-          <p className="text-xs max-w-xs text-center opacity-70">
+          <p className="max-w-xs text-center text-xs opacity-70">
             Choose your Treelink username, you can still change it later.
           </p>
         </div>
 
-        <div className="flex flex-col w-full max-w-sm gap-3">
+        <div className="flex w-full max-w-sm flex-col gap-3">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -108,7 +105,7 @@ const AddUsername = () => {
                           className="rounded-full pl-[6.3rem]"
                           {...field}
                         />
-                        <div className=" absolute flex gap-1 h-fit left-3 top-0 bottom-0 my-auto text-sm opacity-60">
+                        <div className="absolute bottom-0 left-3 top-0 my-auto flex h-fit gap-1 text-sm opacity-60">
                           <p>treelink.one &#47;</p>
                           <p
                             className={cn("", {
@@ -133,10 +130,10 @@ const AddUsername = () => {
               </Button>
             </form>
           </Form>
-          <div className="flex gap-1 items-center justify-center opacity-60 text-sm">
+          <div className="flex items-center justify-center gap-1 text-sm opacity-60">
             <p className="">Don&apos;t want to continue?</p>
             <button
-              className=" hover:underline"
+              className="hover:underline"
               onClick={() => {
                 SignOut();
                 router.refresh();
@@ -147,13 +144,13 @@ const AddUsername = () => {
           </div>
         </div>
       </div>
-      <div className="w-full h-full relative lg:block hidden">
+      <div className="relative hidden h-full w-full lg:block">
         <Image
           alt="background"
           width={1800}
           height={1000}
           src="/add-username.png"
-          className="w-full h-full top-0 left-0 absolute object-center object-cover"
+          className="absolute left-0 top-0 h-full w-full object-cover object-center"
         />
       </div>
     </div>

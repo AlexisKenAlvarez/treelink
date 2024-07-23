@@ -8,26 +8,49 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+enum PRIVACY {
+  PUBLIC
+  PRIVATE
+}
+
 model Users {
-  email         String  @unique
-  username      String?
+  email         String   @unique
+  username      String?  @unique
   name          String
   bio           String?
   image         String?
-  id            Int     @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   profile_title String
   Links         Links[]
+  Themes        Themes[]
+  privacy       PRIVACY  @default(PUBLIC)
+  premium       Boolean  @default(false)
 
   @@index([email])
+  @@index([username])
 }
 
 model Links {
   id            Int     @id @default(autoincrement())
   user_id       Int
-  user          Users?  @relation(fields: [user_id], references: [id])
+  user          Users   @relation(fields: [user_id], references: [id])
   order         Int
   title         String
   url           String
   show_icon     Boolean
   uploaded_icon String?
+}
+
+model Themes {
+  id                Int     @id @default(autoincrement())
+  user_id           Int
+  user              Users   @relation(fields: [user_id], references: [id])
+  background        String?
+  background_color  String? @default("#ffffff")
+  title_color       String? @default("#000000")
+  bio_color         String? @default("#000000")
+  frame_active      Boolean @default(false)
+  frame_color       String? @default("#000000")
+  frame_blur        Boolean @default(false)
+  frame_blur_amount Int?    @default(0)
 }

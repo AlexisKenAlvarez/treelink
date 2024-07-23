@@ -1,7 +1,13 @@
 import { getClient } from "@/lib/client";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
-import { ADD_USER_MUTATION, USER_QUERY } from "./lib/graphql";
+import {
+  ADD_USER_MUTATION,
+  UPDATE_USER_MUTATION,
+  USER_QUERY,
+} from "./lib/graphql";
+
+const SERVICE_ROLE_KEY = process.env.SERVICE_ROLE_KEY;
 
 declare module "next-auth" {
   /**
@@ -39,12 +45,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async session({ session, token, trigger }) {
-      session.user.id = token.id as string
-      session.user.username = token.username as string
+      session.user.id = token.id as string;
+      session.user.username = token.username as string;
 
       return session;
     },
-    async jwt({ token, trigger, session }) {
+    async jwt({ token, trigger, session, profile, account, user }) {
       const client = getClient();
       const { data } = await client.query({
         query: USER_QUERY,
@@ -56,7 +62,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (data.getUser) {
         token.id = data.getUser.id;
         token.username = data.getUser.username as string;
+
+        if (data.getUser.image !== profile?.picture) {
+          await client.mutate({
+            mutation: UPDATE_USER_MUTATION,
+            variables: {
+              value: {
+                id: data.getUser.id,
+                image: profile?.picture,
+              },
+            },
+            context: {
+              headers: {
+                "x-service-role-key": SERVICE_ROLE_KEY,
+              },
+            },
+          });
+        }
       } else {
+        console.log("serice role key", SERVICE_ROLE_KEY);
         const { data } = await client.mutate({
           mutation: ADD_USER_MUTATION,
           variables: {
@@ -68,7 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
 
-        token.id = data?.addUser?.id
+        token.id = data?.addUser?.id;
       }
 
       if (trigger === "update") {
