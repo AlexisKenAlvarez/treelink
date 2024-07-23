@@ -21,6 +21,22 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ metadata, file }) => {
       const link_id = metadata.link_id;
       const file_url = file.url;
+      const client = getClient();
+
+      await client.mutate({
+        mutation: UPDATE_LINK_MUTATION,
+        variables: {
+          value: {
+            id: link_id,
+            uploaded_icon: file_url,
+          },
+        },
+        context: {
+          headers: {
+            "x-service-role-key": process.env.SERVICE_ROLE_KEY,
+          },
+        },
+      });
       // This code RUNS ON YOUR SERVER after upload
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback

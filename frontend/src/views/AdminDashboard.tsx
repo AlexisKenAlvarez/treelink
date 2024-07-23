@@ -152,8 +152,6 @@ const AdminDashboard = ({
     }
   }, DEBOUNCE_TIME);
 
-  type Edit_Background_Action = "ADD" | "REMOVE";
-
   const handleEditLink = useCallback(async (link: Links) => {
     try {
       await updateLink({
@@ -185,26 +183,6 @@ const AdminDashboard = ({
     }
   }, []);
 
-  const handleEditImage = useCallback(
-    async (id: number, value: string | null) => {
-      try {
-        await updateLink({
-          variables: {
-            value: {
-              id,
-              uploaded_icon: value,
-            },
-          },
-        });
-
-        await refetch();
-      } catch (error) {
-        toast.error;
-        console.log(error);
-      }
-    },
-    [],
-  );
 
   const handleDeleteLink = useCallback(async (id: number) => {
     try {
@@ -350,7 +328,6 @@ const AdminDashboard = ({
                           <LinkComponent
                             link={link}
                             dragProps={provided.dragHandleProps}
-                            handleEditImage={handleEditImage}
                             handleEditLink={handleEditLink}
                             handleRemoveImage={handleRemoveImage}
                             handleDeleteLink={handleDeleteLink}
@@ -404,14 +381,12 @@ const AdminDashboard = ({
 const LinkComponent = ({
   link,
   dragProps,
-  handleEditImage,
   handleEditLink,
   handleRemoveImage,
   handleDeleteLink,
 }: {
   link: Links;
   dragProps: DraggableProvidedDragHandleProps | null;
-  handleEditImage: (id: number, value: string | null) => void;
   handleEditLink: (link: Links) => void;
   handleRemoveImage: (id: number) => void;
   handleDeleteLink: (id: number) => void;
@@ -460,11 +435,7 @@ const LinkComponent = ({
     setFiles(acceptedFiles);
   }, []);
 
-  const { startUpload, permittedFileInfo } = useUploadThing("imageUploader", {
-    onClientUploadComplete: async (data) => {
-      handleEditImage(data[0].serverData.link_id, data[0].url);
-    },
-  });
+  const { startUpload, permittedFileInfo } = useUploadThing("imageUploader");
 
   const fileTypes = permittedFileInfo?.config
     ? Object.keys(permittedFileInfo?.config)
