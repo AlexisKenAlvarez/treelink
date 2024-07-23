@@ -145,28 +145,14 @@ const resolvers = {
       if (!data) {
         return new Error("Link not found");
       }
-
+      const values = ["order", "title", "url", "show_icon", "uploaded_icon"];
       const updateData = {};
 
-      if (args.value?.order !== data.order) {
-        updateData.order = args.value.order;
-      }
-
-      if (args.value.title !== data.title) {
-        updateData.title = args.value.title;
-      }
-
-      if (args.value.url !== data.url) {
-        updateData.url = args.value.url;
-      }
-
-      if (args.value.show_icon !== data.show_icon) {
-        updateData.show_icon = args.value.show_icon;
-      }
-
-      if (args.value.uploaded_icon !== data.uploaded_icon) {
-        updateData.uploaded_icon = args.value.uploaded_icon;
-      }
+      values.forEach((value) => {
+        if (args.value[value] && args.value[value] !== data[value]) {
+          updateData[value] = args.value[value];
+        }
+      });
 
       return await prisma.links.update({
         where: {

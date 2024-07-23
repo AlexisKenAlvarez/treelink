@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   Loader,
   LogOut,
+  Palette,
   PanelTopOpen,
   Settings,
   Share2,
@@ -46,7 +47,11 @@ const links = [
     link: "/admin",
     icon: LinkIcon,
   },
-
+  {
+    title: "Theme",
+    link: "/admin/theme",
+    icon: Palette,
+  },
   {
     title: "Settings",
     link: "/admin/settings",

@@ -34,9 +34,9 @@ export const typeDefs = `#graphql
   input UpdateLinkInput {
     id: Int!
     order: Int
-    title: String!
-    url: String!
-    show_icon: Boolean!
+    title: String
+    url: String
+    show_icon: Boolean
     uploaded_icon: String
   }
   input AddLinkInput {

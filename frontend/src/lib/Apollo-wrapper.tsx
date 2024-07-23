@@ -7,9 +7,10 @@ import { onError } from "@apollo/client/link/error";
 import {
   ApolloClient,
   ApolloNextAppProvider,
-  InMemoryCache
+  InMemoryCache,
 } from "@apollo/experimental-nextjs-app-support";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
+
 
 // have a function to create a client for you
 function makeClient() {
@@ -45,7 +46,7 @@ function makeClient() {
           `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
         ),
       );
-  
+
     if (networkError) console.log(`[Network error]: ${networkError}`);
   });
 
