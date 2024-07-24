@@ -158,7 +158,6 @@ const AdminDashboard = ({
   }, DEBOUNCE_TIME);
 
   const handleEditLink = useCallback(async (link: Links) => {
-    console.log("🚀 ~ handleEditLink ~ link:", link);
     try {
       await updateLink({
         variables: {
@@ -191,12 +190,12 @@ const AdminDashboard = ({
 
   const handleDeleteLink = useCallback(async (id: number) => {
     try {
+      setLinks((current) => current.filter((link) => link.id !== id));
       await deleteLinkMutation({
         variables: {
           removeImageId: id,
         },
       });
-      await refetch();
     } catch (error) {
       console.log(error);
     }
@@ -255,7 +254,7 @@ const AdminDashboard = ({
                   toast.error("Free users can only have 5 links");
                   return;
                 }
-                await createLinkMutation({
+                const { data } = await createLinkMutation({
                   variables: {
                     value: {
                       user_id: userData.id,
@@ -267,7 +266,18 @@ const AdminDashboard = ({
                   },
                 });
 
-                await refetch();
+                const link_id = data?.addLink?.id;
+
+                setLinks((current) => [
+                  ...current,
+                  {
+                    id: link_id!,
+                    title: "",
+                    url: "",
+                    show_icon: false,
+                    uploaded_icon: null,
+                  },
+                ]);
               }}
             >
               {isCreateLoading ? (

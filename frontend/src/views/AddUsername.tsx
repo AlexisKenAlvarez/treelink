@@ -21,12 +21,14 @@ import { Input } from "@/components/ui/input";
 import { SignOut } from "@/lib/auth-function";
 import { UPDATE_USER_MUTATION } from "@/lib/graphql";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const AddUsername = () => {
   const router = useRouter();
 
   const { data: session, update } = useSession();
   const [addUsername, { loading }] = useMutation(UPDATE_USER_MUTATION);
+  const [debounce, setDebounce] = useState(false);
 
   const formSchema = z.object({
     username: z
@@ -43,6 +45,8 @@ const AddUsername = () => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (debounce) return;
+    setDebounce(true);
     try {
       await addUsername({
         variables: {
@@ -56,8 +60,9 @@ const AddUsername = () => {
         username: values.username,
       });
 
-      router.push("/admin");
+      window.location.reload();
     } catch (error) {
+      setDebounce(false);
       console.log(error);
     }
   }
@@ -105,7 +110,7 @@ const AddUsername = () => {
                           {...field}
                         />
                         <div className="absolute bottom-0 left-3 top-0 my-auto flex h-fit gap-1 text-sm opacity-60">
-                          <p>treelink.ink &#47;</p>
+                          <p>treelink.live &#47;</p>
                           <p
                             className={cn("", {
                               "opacity-0": form.watch("username").length > 0,
@@ -123,7 +128,7 @@ const AddUsername = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={!form.formState.isValid || loading}
+                disabled={!form.formState.isValid || debounce}
               >
                 {loading ? "Loading..." : "Continue"}
               </Button>

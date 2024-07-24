@@ -80,7 +80,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
         }
       } else {
-        console.log("serice role key", SERVICE_ROLE_KEY);
+
         const { data } = await client.mutate({
           mutation: ADD_USER_MUTATION,
           variables: {

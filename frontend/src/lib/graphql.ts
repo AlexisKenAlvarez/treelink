@@ -86,6 +86,7 @@ export const UPDATE_USER_MUTATION = gql(`
 export const ADD_LINK_MUTATION = gql(`
   mutation AddLinkMutation($value: AddLinkInput!) {
   addLink(value: $value) {
+    id
     order
     show_icon
     title
