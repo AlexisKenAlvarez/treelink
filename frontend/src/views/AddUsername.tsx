@@ -105,7 +105,7 @@ const AddUsername = () => {
                           {...field}
                         />
                         <div className="absolute bottom-0 left-3 top-0 my-auto flex h-fit gap-1 text-sm opacity-60">
-                          <p>treelink.one &#47;</p>
+                          <p>treelink.ink &#47;</p>
                           <p
                             className={cn("", {
                               "opacity-0": form.watch("username").length > 0,
