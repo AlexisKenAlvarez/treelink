@@ -8,19 +8,13 @@ const page = async () => {
   const session = await auth();
 
   if (session && session.user.username) {
-    return redirect("/admin")
+    return redirect("/admin");
   }
 
   return (
     <>
-      {session && !session.user.username ? (
-        <AddUsername />
-      ) : (
-        <>
-          <Nav session={session} />
-          <Hero />
-        </>
-      )}
+      <Nav session={session} />
+      <Hero />
     </>
   );
 };

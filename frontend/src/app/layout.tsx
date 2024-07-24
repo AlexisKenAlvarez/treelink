@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import AddUsername from "@/views/AddUsername";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
+import ClientWrapper from "@/components/ClientWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +28,10 @@ export default async function RootLayout({
       <body className={`${inter.className} ${GeistSans.variable} !font-sans`}>
         <SessionProvider session={session}>
           <ApolloWrapper>
-            {session && !session.user.username ? <AddUsername /> : children}
+            {/* {session && !session.user.username ? <AddUsername /> : children} */}
+            <ClientWrapper session={session} >
+              {children}
+            </ClientWrapper>
           </ApolloWrapper>
         </SessionProvider>
         <Toaster />

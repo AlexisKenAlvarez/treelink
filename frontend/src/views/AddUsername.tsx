@@ -23,7 +23,7 @@ import { UPDATE_USER_MUTATION } from "@/lib/graphql";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-const AddUsername = () => {
+const AddUsername = ({setUsername}: {setUsername: (value: string) => void}) => {
   const router = useRouter();
 
   const { data: session, update } = useSession();
@@ -43,6 +43,7 @@ const AddUsername = () => {
       username: "",
     },
   });
+  console.log("🚀 ~ AddUsername ~ form:", form.getValues)
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (debounce) return;
@@ -56,11 +57,13 @@ const AddUsername = () => {
           },
         },
       });
+      
       update({
         username: values.username,
       });
 
-      window.location.reload();
+      setUsername(values.username)
+
     } catch (error) {
       setDebounce(false);
       console.log(error);
