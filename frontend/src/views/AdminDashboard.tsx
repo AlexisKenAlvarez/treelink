@@ -95,7 +95,7 @@ const AdminDashboard = ({
     data: user,
     refetch,
     loading: userQueryLoading,
-    client
+    client,
   } = useQuery(USER_QUERY_WITH_LINK, {
     variables: {
       email: userData.email,
@@ -117,9 +117,6 @@ const AdminDashboard = ({
 
   const [deleteLinkMutation, { loading: isDeleteLinkLoading }] =
     useMutation(DELETE_LINK_MUTATION);
-
-  const [editBackgroundMutation, { loading: isEditBackgroundLoading }] =
-    useMutation(EDIT_BACKGROUND_MUTATION);
 
   const [links, setLinks] = useState<Links[]>([]);
 
@@ -203,7 +200,6 @@ const AdminDashboard = ({
     } catch (error) {
       console.log(error);
     }
-    
   }, []);
 
   useEffect(() => {
@@ -220,7 +216,6 @@ const AdminDashboard = ({
         }),
       ]);
     }
-
   }, [user]);
 
   return (

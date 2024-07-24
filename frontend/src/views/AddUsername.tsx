@@ -26,7 +26,6 @@ const AddUsername = () => {
   const router = useRouter();
 
   const { data: session, update } = useSession();
-  console.log("🚀 ~ AddUsername ~ session:", session);
   const [addUsername, { loading }] = useMutation(UPDATE_USER_MUTATION);
 
   const formSchema = z.object({
@@ -57,7 +56,7 @@ const AddUsername = () => {
         username: values.username,
       });
 
-      window.location.reload();
+      router.push("/admin");
     } catch (error) {
       console.log(error);
     }
